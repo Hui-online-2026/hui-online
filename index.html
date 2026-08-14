@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hụi Online - Demo 10 Chân</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f3f6fb;color:#172033}
+header{background:#1769e0;color:white;padding:18px;text-align:center}
+.container{max-width:900px;margin:20px auto;padding:0 14px}
+.card{background:white;border-radius:14px;padding:18px;margin-bottom:16px;box-shadow:0 3px 12px #0001}
+h1,h2{margin:0 0 10px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{padding:14px;border-radius:10px;background:#eef5ff}.stat b{display:block;font-size:20px;margin-top:5px}
+button{border:0;border-radius:9px;padding:10px 14px;background:#1769e0;color:white;cursor:pointer;margin:3px}
+button.red{background:#dc3545}button.green{background:#198754}
+input,select{width:100%;padding:10px;border:1px solid #ccd5e2;border-radius:8px;margin:5px 0 10px}
+table{width:100%;border-collapse:collapse}th,td{padding:10px;border-bottom:1px solid #e8edf4;text-align:left}
+.badge{padding:4px 8px;border-radius:20px;background:#e9f7ef;color:#198754;font-size:12px}
+.small{font-size:13px;color:#667085}.total{font-weight:bold;color:#1769e0}
+@media(max-width:650px){.stats{grid-template-columns:1fr}.card{padding:14px}table{font-size:13px}}
+</style>
+</head>
+<body>
+<header>
+<h1>💰 HỤI ONLINE</h1>
+<div>Demo dây hụi 10 chân • 500.000đ / tuần</div>
+</header>
+
+<div class="container">
+<div class="card">
+<h2>Thông tin dây hụi</h2>
+<div class="stats">
+<div class="stat">Số chân<b id="members">10</b></div>
+<div class="stat">Mức hụi<b>500.000đ</b></div>
+<div class="stat">Kỳ hiện tại<b id="round">1 / 10</b></div>
+</div>
+</div>
+
+<div class="card">
+<h2>➕ Thêm thành viên</h2>
+<input id="name" placeholder="Tên thành viên">
+<button onclick="addMember()">Thêm vào dây hụi</button>
+<button class="green" onclick="collectAll()">Đánh dấu đã đóng kỳ này</button>
+</div>
+
+<div class="card">
+<h2>📋 Danh sách thành viên</h2>
+<table>
+<thead><tr><th>#</th><th>Thành viên</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+<tbody id="list"></tbody>
+</table>
+</div>
+
+<div class="card">
+<h2>💵 Tổng hợp kỳ này</h2>
+<p>Tổng tiền phải thu: <span class="total" id="expected">5.000.000đ</span></p>
+<p>Đã thu: <span class="total" id="paid">0đ</span></p>
+<p>Còn thiếu: <span class="total" id="remain">5.000.000đ</span></p>
+<button onclick="nextRound()">➡️ Sang kỳ tiếp theo</button>
+<button class="red" onclick="resetDemo()">↺ Xóa dữ liệu demo</button>
+</div>
+
+<div class="card small">
+<strong>Lưu ý:</strong> Đây chỉ là bản demo chạy trên trình duyệt, dữ liệu được lưu trên máy hiện tại. Chưa có đăng nhập, Zalo hay thanh toán thật.
+</div>
+</div>
+
+<script>
+const KEY='hui_demo_10_chan';
+let data=JSON.parse(localStorage.getItem(KEY)||'null')||{
+round:1,
+members:[
+{name:'Thành viên 1',paid:false},{name:'Thành viên 2',paid:false},
+{name:'Thành viên 3',paid:false},{name:'Thành viên 4',paid:false},
+{name:'Thành viên 5',paid:false},{name:'Thành viên 6',paid:false},
+{name:'Thành viên 7',paid:false},{name:'Thành viên 8',paid:false},
+{name:'Thành viên 9',paid:false},{name:'Thành viên 10',paid:false}
+]};
+function money(n){return n.toLocaleString('vi-VN')+'đ'}
+function save(){localStorage.setItem(KEY,JSON.stringify(data));render()}
+function render(){
+ document.getElementById('members').textContent=data.members.length;
+ document.getElementById('round').textContent=data.round+' / 10';
+ let paid=data.members.filter(x=>x.paid).length*500000;
+ let expected=data.members.length*500000;
+ document.getElementById('expected').textContent=money(expected);
+ document.getElementById('paid').textContent=money(paid);
+ document.getElementById('remain').textContent=money(expected-paid);
+ document.getElementById('list').innerHTML=data.members.map((m,i)=>`
+ <tr><td>${i+1}</td><td>${m.name}</td>
+ <td>${m.paid?'<span class="badge">Đã đóng</span>':'<span class="badge" style="background:#fff3cd;color:#946200">Chưa đóng</span>'}</td>
+ <td><button onclick="togglePaid(${i})">${m.paid?'Hủy':'Đã đóng'}</button>
+ <button class="red" onclick="removeMember(${i})">Xóa</button></td></tr>`).join('');
+}
+function addMember(){
+ let n=document.getElementById('name').value.trim();
+ if(!n)return alert('Vui lòng nhập tên thành viên');
+ if(data.members.length>=10)return alert('Demo này tối đa 10 chân');
+ data.members.push({name:n,paid:false});document.getElementById('name').value='';save();
+}
+function togglePaid(i){data.members[i].paid=!data.members[i].paid;save()}
+function collectAll(){data.members.forEach(x=>x.paid=true);save()}
+function removeMember(i){if(confirm('Xóa thành viên này?')){data.members.splice(i,1);save()}}
+function nextRound(){
+ if(data.round>=10)return alert('Đã hết 10 kỳ trong demo');
+ data.round++;data.members.forEach(x=>x.paid=false);save();
+}
+function resetDemo(){if(confirm('Khôi phục lại 10 thành viên demo?')){localStorage.removeItem(KEY);location.reload()}}
+render();
+</script>
+</body>
+</html>
